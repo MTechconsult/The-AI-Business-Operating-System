@@ -1,0 +1,2063 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AI Business Operating System — Pro Edition</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #080C14;
+  --surface: #0D1320;
+  --card: #111827;
+  --border: rgba(255,255,255,0.07);
+  --gold: #C9A84C;
+  --gold-light: #E8C97A;
+  --gold-dim: rgba(201,168,76,0.15);
+  --text: #E8EAF0;
+  --muted: #7A8099;
+  --accent: #4A9EFF;
+  --green: #3ECF8E;
+  --red: #FF6B6B;
+  --sidebar-w: 280px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── NOISE TEXTURE OVERLAY ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.4;
+}
+
+/* ── SIDEBAR ── */
+#sidebar {
+  position: fixed;
+  left: 0; top: 0; bottom: 0;
+  width: var(--sidebar-w);
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  transition: transform 0.3s ease;
+  overflow-y: auto;
+}
+
+.sidebar-brand {
+  padding: 28px 24px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sidebar-brand .logo-mark {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, var(--gold), #8B6914);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Playfair Display', serif;
+  font-weight: 900;
+  font-size: 18px;
+  color: var(--bg);
+  margin-bottom: 12px;
+  box-shadow: 0 0 20px rgba(201,168,76,0.3);
+}
+
+.sidebar-brand h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  line-height: 1.3;
+}
+
+.sidebar-brand p {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 4px;
+  letter-spacing: 0.04em;
+}
+
+.sidebar-progress {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.progress-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 8px;
+  letter-spacing: 0.06em;
+}
+
+.progress-bar {
+  height: 3px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold), var(--gold-light));
+  border-radius: 99px;
+  transition: width 0.4s ease;
+  width: 0%;
+}
+
+.sidebar-nav { padding: 16px 12px; flex: 1; }
+
+.nav-section-label {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 8px 12px 6px;
+  font-weight: 600;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--muted);
+  transition: all 0.2s;
+  margin-bottom: 2px;
+  border: 1px solid transparent;
+  font-weight: 400;
+  text-decoration: none;
+}
+
+.nav-item:hover {
+  background: rgba(255,255,255,0.04);
+  color: var(--text);
+}
+
+.nav-item.active {
+  background: var(--gold-dim);
+  color: var(--gold-light);
+  border-color: rgba(201,168,76,0.2);
+  font-weight: 500;
+}
+
+.nav-item.done {
+  color: var(--green);
+}
+
+.nav-item.done .nav-icon { color: var(--green); }
+
+.nav-icon {
+  font-size: 15px;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.nav-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  margin-left: auto;
+  opacity: 0.5;
+}
+
+/* ── MAIN CONTENT ── */
+#main {
+  margin-left: var(--sidebar-w);
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── TOPBAR ── */
+.topbar {
+  position: sticky;
+  top: 0;
+  background: rgba(8,12,20,0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 50;
+}
+
+.topbar-breadcrumb {
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+}
+
+.topbar-breadcrumb span { color: var(--gold); }
+
+.topbar-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+  font-family: 'DM Sans', sans-serif;
+  letter-spacing: 0.03em;
+}
+
+.btn-ghost {
+  background: rgba(255,255,255,0.06);
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+
+.btn-ghost:hover {
+  background: rgba(255,255,255,0.1);
+  color: var(--text);
+}
+
+.btn-gold {
+  background: linear-gradient(135deg, var(--gold), #8B6914);
+  color: #0A0800;
+  font-weight: 600;
+  box-shadow: 0 4px 15px rgba(201,168,76,0.25);
+}
+
+.btn-gold:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(201,168,76,0.35);
+}
+
+/* ── PAGE SECTIONS ── */
+.page-section {
+  display: none;
+  padding: 56px 48px;
+  max-width: 880px;
+  animation: fadeUp 0.4s ease;
+}
+
+.page-section.active { display: block; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── HERO (Cover Page) ── */
+.hero-cover {
+  padding: 56px 48px 0;
+  max-width: 880px;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--gold-dim);
+  border: 1px solid rgba(201,168,76,0.25);
+  border-radius: 99px;
+  padding: 5px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gold);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 28px;
+}
+
+.hero-cover h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(38px, 5vw, 58px);
+  font-weight: 900;
+  line-height: 1.1;
+  color: #fff;
+  margin-bottom: 10px;
+}
+
+.hero-cover h1 em {
+  font-style: italic;
+  background: linear-gradient(135deg, var(--gold), var(--gold-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-sub {
+  font-size: 18px;
+  color: var(--muted);
+  font-weight: 300;
+  line-height: 1.6;
+  max-width: 580px;
+  margin-bottom: 40px;
+}
+
+.hero-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  margin-bottom: 40px;
+}
+
+.stat-box {
+  background: var(--card);
+  padding: 20px;
+  text-align: center;
+}
+
+.stat-box .num {
+  font-family: 'Playfair Display', serif;
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--gold);
+  display: block;
+}
+
+.stat-box .lbl {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 4px;
+  letter-spacing: 0.05em;
+}
+
+.hero-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+  margin: 40px 0;
+}
+
+/* ── CONTENT TYPOGRAPHY ── */
+.section-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gold);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.section-label::before {
+  content: '';
+  width: 24px;
+  height: 1px;
+  background: var(--gold);
+  display: block;
+}
+
+h2.chapter-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1.2;
+  color: #fff;
+  margin-bottom: 12px;
+}
+
+h3.sub-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  margin: 32px 0 12px;
+}
+
+p.lead {
+  font-size: 16px;
+  color: var(--muted);
+  line-height: 1.7;
+  margin-bottom: 28px;
+  font-weight: 300;
+}
+
+p.body-text {
+  font-size: 14px;
+  color: rgba(232,234,240,0.8);
+  line-height: 1.8;
+  margin-bottom: 20px;
+}
+
+/* ── CALLOUT BOXES ── */
+.callout {
+  border-radius: 10px;
+  padding: 20px 24px;
+  margin: 24px 0;
+  border-left: 3px solid;
+}
+
+.callout-gold {
+  background: var(--gold-dim);
+  border-color: var(--gold);
+}
+
+.callout-blue {
+  background: rgba(74,158,255,0.08);
+  border-color: var(--accent);
+}
+
+.callout-green {
+  background: rgba(62,207,142,0.08);
+  border-color: var(--green);
+}
+
+.callout-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.callout-gold .callout-label { color: var(--gold); }
+.callout-blue .callout-label { color: var(--accent); }
+.callout-green .callout-label { color: var(--green); }
+
+.callout p {
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--text);
+}
+
+/* ── CHECKLIST ── */
+.checklist {
+  list-style: none;
+  margin: 20px 0;
+}
+
+.checklist li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+  line-height: 1.6;
+  color: rgba(232,234,240,0.85);
+}
+
+.checklist li:last-child { border-bottom: none; }
+
+.check-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--gold-dim);
+  border: 1px solid rgba(201,168,76,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--gold);
+}
+
+/* ── GRID CARDS ── */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 24px 0;
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin: 24px 0;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px;
+  transition: border-color 0.2s;
+}
+
+.card:hover { border-color: rgba(201,168,76,0.25); }
+
+.card .card-icon { font-size: 22px; margin-bottom: 10px; }
+
+.card h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 6px;
+}
+
+.card p {
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.card .card-tag {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+}
+
+.tag-gold { background: var(--gold-dim); color: var(--gold); }
+.tag-blue { background: rgba(74,158,255,0.12); color: var(--accent); }
+.tag-green { background: rgba(62,207,142,0.1); color: var(--green); }
+
+/* ── PRICE TABLE ── */
+.price-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 24px 0;
+  font-size: 13px;
+}
+
+.price-table th {
+  text-align: left;
+  padding: 12px 16px;
+  background: rgba(201,168,76,0.08);
+  color: var(--gold);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(201,168,76,0.2);
+  font-weight: 600;
+}
+
+.price-table td {
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--border);
+  color: rgba(232,234,240,0.85);
+  vertical-align: top;
+  line-height: 1.5;
+}
+
+.price-table tr:last-child td { border-bottom: none; }
+
+.price-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+.price-hl {
+  font-family: 'DM Mono', monospace;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--gold-light);
+}
+
+/* ── SCRIPT BLOCKS ── */
+.script-block {
+  background: #0A0E1A;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 20px 0;
+}
+
+.script-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  background: rgba(255,255,255,0.03);
+  border-bottom: 1px solid var(--border);
+}
+
+.script-header span {
+  font-size: 11px;
+  color: var(--muted);
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 0.08em;
+}
+
+.copy-btn {
+  font-size: 11px;
+  color: var(--gold);
+  cursor: pointer;
+  background: none;
+  border: 1px solid rgba(201,168,76,0.3);
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-family: 'DM Sans', sans-serif;
+  transition: all 0.2s;
+}
+
+.copy-btn:hover { background: var(--gold-dim); }
+
+.script-block pre {
+  padding: 20px;
+  font-family: 'DM Mono', monospace;
+  font-size: 12.5px;
+  line-height: 1.75;
+  color: #C8CFE0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.script-block pre .hl { color: var(--gold-light); font-weight: 500; }
+.script-block pre .arrow { color: var(--green); }
+.script-block pre .comment { color: var(--muted); font-style: italic; }
+
+/* ── TOOL TABLE ── */
+.tool-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.tool-row:last-child { border-bottom: none; }
+
+.tool-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.tool-info h5 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 2px;
+}
+
+.tool-info p {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.tool-meta {
+  margin-left: auto;
+  text-align: right;
+}
+
+.tool-meta .roi {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  color: var(--green);
+  font-weight: 500;
+}
+
+.tool-meta .cost {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+/* ── MILESTONE TIMELINE ── */
+.timeline {
+  position: relative;
+  padding-left: 32px;
+  margin: 28px 0;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 10px;
+  top: 0; bottom: 0;
+  width: 1px;
+  background: linear-gradient(to bottom, var(--gold), transparent);
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: 28px;
+}
+
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -26px;
+  top: 5px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 10px rgba(201,168,76,0.5);
+}
+
+.timeline-item .week {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.timeline-item h4 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 6px;
+}
+
+.timeline-item p {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+/* ── NAV FOOTER ── */
+.section-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 56px;
+  padding-top: 28px;
+  border-top: 1px solid var(--border);
+}
+
+.nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 20px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--muted);
+  transition: all 0.2s;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.nav-btn:hover {
+  border-color: rgba(201,168,76,0.3);
+  color: var(--gold);
+}
+
+.nav-btn.next-btn {
+  background: var(--gold-dim);
+  border-color: rgba(201,168,76,0.3);
+  color: var(--gold);
+  font-weight: 500;
+}
+
+.nav-btn.next-btn:hover {
+  background: rgba(201,168,76,0.2);
+}
+
+/* ── MOBILE SIDEBAR TOGGLE ── */
+#menu-toggle {
+  display: none;
+  position: fixed;
+  top: 14px; left: 14px;
+  z-index: 200;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 16px;
+  color: var(--text);
+}
+
+@media (max-width: 768px) {
+  #sidebar {
+    transform: translateX(-100%);
+  }
+  #sidebar.open {
+    transform: translateX(0);
+    box-shadow: 20px 0 60px rgba(0,0,0,0.5);
+  }
+  #main {
+    margin-left: 0;
+  }
+  #menu-toggle { display: block; }
+  .page-section { padding: 40px 24px; }
+  .hero-cover { padding: 56px 24px 0; }
+  .topbar { padding: 14px 24px; }
+  .hero-stats { grid-template-columns: repeat(2, 1fr); }
+  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+}
+
+/* ── HIGHLIGHT STRIP ── */
+.highlight-strip {
+  background: linear-gradient(135deg, rgba(201,168,76,0.1), rgba(201,168,76,0.04));
+  border: 1px solid rgba(201,168,76,0.2);
+  border-radius: 10px;
+  padding: 20px 24px;
+  margin: 24px 0;
+}
+
+.highlight-strip h4 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--gold-light);
+  margin-bottom: 6px;
+}
+
+.highlight-strip p {
+  font-size: 13px;
+  color: rgba(232,234,240,0.75);
+  line-height: 1.7;
+}
+
+/* ── COUNTRY FLAGS ROW ── */
+.country-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 20px 0;
+}
+
+.country-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+/* ── STEP BOXES ── */
+.step-box {
+  display: flex;
+  gap: 18px;
+  margin-bottom: 20px;
+  align-items: flex-start;
+}
+
+.step-num {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: var(--gold-dim);
+  border: 1px solid rgba(201,168,76,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Playfair Display', serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--gold);
+  flex-shrink: 0;
+}
+
+.step-content h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 6px;
+}
+
+.step-content p {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+/* ── INCOME MATH BOX ── */
+.math-box {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  margin: 24px 0;
+}
+
+.math-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13.5px;
+}
+
+.math-row:last-child { border-bottom: none; }
+
+.math-row .label { color: var(--muted); }
+.math-row .value { font-family: 'DM Mono', monospace; color: var(--text); font-weight: 500; }
+.math-row.total .label { color: #fff; font-weight: 600; font-size: 15px; }
+.math-row.total .value { color: var(--gold-light); font-size: 18px; font-weight: 500; }
+
+</style>
+</head>
+<body>
+
+<!-- Mobile Toggle -->
+<button id="menu-toggle" onclick="toggleSidebar()">☰</button>
+
+<!-- SIDEBAR -->
+<nav id="sidebar">
+  <div class="sidebar-brand">
+    <div class="logo-mark">AI</div>
+    <h2>AI Business OS</h2>
+    <p>Pro Edition · 2026</p>
+  </div>
+  <div class="sidebar-progress">
+    <div class="progress-label">
+      <span>YOUR PROGRESS</span>
+      <span id="pct">0%</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="pbar"></div></div>
+  </div>
+  <div class="sidebar-nav">
+    <div class="nav-section-label">Introduction</div>
+    <div class="nav-item active" onclick="showSection('cover',this)">
+      <span class="nav-icon">🏠</span> Welcome & Overview
+      <span class="nav-num">00</span>
+    </div>
+
+    <div class="nav-section-label">Module 1 — Foundation</div>
+    <div class="nav-item" onclick="showSection('m1a',this)">
+      <span class="nav-icon">🎯</span> Niche Selection System
+      <span class="nav-num">01</span>
+    </div>
+    <div class="nav-item" onclick="showSection('m1b',this)">
+      <span class="nav-icon">📦</span> Service Package Builder
+      <span class="nav-num">02</span>
+    </div>
+    <div class="nav-item" onclick="showSection('m1c',this)">
+      <span class="nav-icon">💰</span> Pricing by Country
+      <span class="nav-num">03</span>
+    </div>
+
+    <div class="nav-section-label">Module 2 — Clients</div>
+    <div class="nav-item" onclick="showSection('m2a',this)">
+      <span class="nav-icon">🔗</span> LinkedIn Domination
+      <span class="nav-num">04</span>
+    </div>
+    <div class="nav-item" onclick="showSection('m2b',this)">
+      <span class="nav-icon">✉️</span> Outreach Scripts
+      <span class="nav-num">05</span>
+    </div>
+    <div class="nav-item" onclick="showSection('m2c',this)">
+      <span class="nav-icon">📄</span> Proposal Templates
+      <span class="nav-num">06</span>
+    </div>
+
+    <div class="nav-section-label">Module 3 — Delivery</div>
+    <div class="nav-item" onclick="showSection('m3a',this)">
+      <span class="nav-icon">🤖</span> Top AI Tools Stack
+      <span class="nav-num">07</span>
+    </div>
+    <div class="nav-item" onclick="showSection('m3b',this)">
+      <span class="nav-icon">⚙️</span> Workflow Automation
+      <span class="nav-num">08</span>
+    </div>
+    <div class="nav-item" onclick="showSection('m3c',this)">
+      <span class="nav-icon">📋</span> Client SOP Docs
+      <span class="nav-num">09</span>
+    </div>
+
+    <div class="nav-section-label">Module 4 — Income</div>
+    <div class="nav-item" onclick="showSection('m4a',this)">
+      <span class="nav-icon">📈</span> $10K/Month Roadmap
+      <span class="nav-num">10</span>
+    </div>
+    <div class="nav-item" onclick="showSection('m4b',this)">
+      <span class="nav-icon">🔄</span> Retainer & Upsell System
+      <span class="nav-num">11</span>
+    </div>
+    <div class="nav-item" onclick="showSection('m4c',this)">
+      <span class="nav-icon">🧾</span> Tax Guide by Country
+      <span class="nav-num">12</span>
+    </div>
+
+    <div class="nav-section-label">Bonus</div>
+    <div class="nav-item" onclick="showSection('bonus',this)">
+      <span class="nav-icon">⭐</span> LinkedIn Profile Makeover
+      <span class="nav-num">13</span>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main id="main">
+  <div class="topbar">
+    <div class="topbar-breadcrumb">AI Business OS &rsaquo; <span id="breadcrumb-text">Welcome</span></div>
+    <div class="topbar-actions">
+      <button class="btn btn-ghost" onclick="window.print()">🖨️ Print</button>
+      <button class="btn btn-gold" onclick="showSection('m1a', document.querySelectorAll('.nav-item')[1])">Start Learning →</button>
+    </div>
+  </div>
+
+  <!-- ══════════ COVER ══════════ -->
+  <div class="hero-cover page-section active" id="sec-cover">
+    <div class="hero-badge">✦ Pro Edition · Updated 2026</div>
+    <h1>The <em>AI Business</em><br/>Operating System</h1>
+    <p class="hero-sub">Your complete done-for-you system to launch a profitable AI consulting agency — calibrated for clients in the UK, US, Canada, Australia & Germany.</p>
+
+    <div class="hero-stats">
+      <div class="stat-box"><span class="num">$10K</span><div class="lbl">Target Month 3</div></div>
+      <div class="stat-box"><span class="num">48hrs</span><div class="lbl">Time to Launch</div></div>
+      <div class="stat-box"><span class="num">5</span><div class="lbl">Markets Covered</div></div>
+      <div class="stat-box"><span class="num">13</span><div class="lbl">Modules Inside</div></div>
+    </div>
+
+    <div class="hero-divider"></div>
+
+    <div class="section-label">What's Inside</div>
+    <h2 class="chapter-title">Everything You Need.<br/>Nothing You Don't.</h2>
+    <p class="lead">No fluff. No theory. Every page of this system is an action you take, a script you send, or a template you deploy. This is the operating system for your AI agency — built from real deals, real niches, real money.</p>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-icon">🎯</div>
+        <h4>Module 1 — Foundation</h4>
+        <p>Niche selection, service packaging, and country-calibrated pricing for UK/US/CA/AU/DE markets.</p>
+        <span class="card-tag tag-gold">3 Chapters</span>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔗</div>
+        <h4>Module 2 — Client Acquisition</h4>
+        <p>LinkedIn domination strategy, outreach scripts that feel warm, and winning proposal templates.</p>
+        <span class="card-tag tag-blue">3 Chapters</span>
+      </div>
+      <div class="card">
+        <div class="card-icon">🤖</div>
+        <h4>Module 3 — AI Delivery Stack</h4>
+        <p>The exact tools, workflows, and SOPs to deliver premium AI services without burning out.</p>
+        <span class="card-tag tag-gold">3 Chapters</span>
+      </div>
+      <div class="card">
+        <div class="card-icon">📈</div>
+        <h4>Module 4 — Income Architecture</h4>
+        <p>90-day roadmap to $10K/month, retainer system, upsell sequences, and country tax guides.</p>
+        <span class="card-tag tag-green">3 Chapters</span>
+      </div>
+    </div>
+
+    <div class="callout callout-gold">
+      <div class="callout-label">✦ Your Guarantee</div>
+      <p>Every template, script, and framework in this system has been built for professionals with zero prior AI agency experience. If you follow the 48-hour launch checklist, you will have a positioned, priced, and presentable AI agency before the weekend is over.</p>
+    </div>
+
+    <div class="section-nav">
+      <div></div>
+      <button class="nav-btn next-btn" onclick="showSection('m1a', document.querySelectorAll('.nav-item')[1])">Start with Module 1 →</button>
+    </div>
+  </div>
+
+  <!-- ══════════ M1A — NICHE ══════════ -->
+  <div class="page-section" id="sec-m1a">
+    <div class="section-label">Module 1 · Chapter 1</div>
+    <h2 class="chapter-title">The Niche Selection System</h2>
+    <p class="lead">The biggest mistake beginners make: trying to serve everyone. The fastest path to $10K/month is extreme specificity. Here is the exact framework to lock in your niche in under 60 minutes.</p>
+
+    <h3 class="sub-title">The PAIN × BUDGET Matrix</h3>
+    <p class="body-text">Every viable AI agency niche sits at the intersection of two variables: how acutely the prospect feels the problem (Pain Intensity) and how much budget they control (Budget Authority). You want to be in the top-right quadrant of both.</p>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-icon">🏥</div>
+        <h4>Healthcare Admin</h4>
+        <p>Clinics drowning in appointment scheduling, billing errors, and patient follow-ups. AI cuts admin time by 60%.</p>
+        <span class="card-tag tag-gold">Pain: 🔥🔥🔥🔥🔥</span>
+      </div>
+      <div class="card">
+        <div class="card-icon">🏠</div>
+        <h4>Real Estate Agencies</h4>
+        <p>Agents losing leads because follow-up is manual. AI nurturing sequences close 3× more deals.</p>
+        <span class="card-tag tag-gold">Pain: 🔥🔥🔥🔥🔥</span>
+      </div>
+      <div class="card">
+        <div class="card-icon">⚖️</div>
+        <h4>Law Firms (SME)</h4>
+        <p>Junior associates spending 70% of time on document review. AI cuts this to minutes. Partners pay anything to fix it.</p>
+        <span class="card-tag tag-blue">Pain: 🔥🔥🔥🔥</span>
+      </div>
+      <div class="card">
+        <div class="card-icon">🎓</div>
+        <h4>Online Education</h4>
+        <p>Course creators and coaches spending hours on content repurposing. AI delivers 10× content in 10% of the time.</p>
+        <span class="card-tag tag-blue">Pain: 🔥🔥🔥🔥</span>
+      </div>
+      <div class="card">
+        <div class="card-icon">🛍️</div>
+        <h4>E-Commerce Brands</h4>
+        <p>Product descriptions, ad copy, and customer support eating team bandwidth. AI automates all three.</p>
+        <span class="card-tag tag-green">Pain: 🔥🔥🔥</span>
+      </div>
+      <div class="card">
+        <div class="card-icon">🏗️</div>
+        <h4>Recruitment Firms</h4>
+        <p>CV screening, candidate outreach, and job description writing are 80% of a recruiter's day. AI handles it.</p>
+        <span class="card-tag tag-green">Pain: 🔥🔥🔥</span>
+      </div>
+    </div>
+
+    <h3 class="sub-title">The 3-Question Niche Test</h3>
+    <p class="body-text">Before locking in your niche, run it through these three questions. If you can answer YES to all three, you have a winning niche.</p>
+
+    <ul class="checklist">
+      <li><div class="check-icon">1</div><div><strong>Does this niche have a measurable problem?</strong> Can you say "they lose X hours/dollars per week because of Y"? Vague pain is unsellable. Specific pain closes deals.</div></li>
+      <li><div class="check-icon">2</div><div><strong>Can AI solve it in a way that's visible to the client?</strong> If the output of your AI service doesn't directly show up in their revenue, retention, or time savings — it will stall. Pick problems with clear before/after.</div></li>
+      <li><div class="check-icon">3</div><div><strong>Are businesses in this niche already spending on solutions?</strong> If they currently pay a human to do what AI will do, you have a ready buyer. You are not educating them on the problem — you are offering a better solution.</div></li>
+    </ul>
+
+    <div class="callout callout-blue">
+      <div class="callout-label">⚡ Speed Tip</div>
+      <p>Do not try to invent a problem. Go to LinkedIn and search: "[niche] + challenges 2026". Read what professionals complain about publicly. Those complaints are your product positioning — word for word.</p>
+    </div>
+
+    <h3 class="sub-title">Niche Positioning Formula</h3>
+    <p class="body-text">Once you pick your niche, build your one-liner using this formula. This is what goes on your LinkedIn headline, your proposal header, and your profile About section.</p>
+
+    <div class="script-block">
+      <div class="script-header">
+        <span>// POSITIONING FORMULA</span>
+        <button class="copy-btn" onclick="copyScript(this)">Copy</button>
+      </div>
+      <pre>
+<span class="hl">I help [NICHE] businesses</span>
+<span class="arrow">→</span> eliminate [SPECIFIC PAIN]
+<span class="arrow">→</span> using AI automation
+<span class="arrow">→</span> so they can [DESIRED OUTCOME]
+<span class="arrow">→</span> without [BIGGEST OBJECTION]
+
+<span class="comment">// Example:</span>
+<span class="hl">"I help UK real estate agencies</span>
+<span class="arrow">→</span> eliminate lead leakage and manual follow-up
+<span class="arrow">→</span> using AI nurturing workflows
+<span class="arrow">→</span> so they close 30% more deals per month
+<span class="arrow">→</span> without hiring extra staff or changing their CRM."</pre>
+    </div>
+
+    <div class="section-nav">
+      <button class="nav-btn" onclick="showSection('cover', document.querySelectorAll('.nav-item')[0])">← Welcome</button>
+      <button class="nav-btn next-btn" onclick="showSection('m1b', document.querySelectorAll('.nav-item')[2])">Service Builder →</button>
+    </div>
+  </div>
+
+  <!-- ══════════ M1B — PACKAGES ══════════ -->
+  <div class="page-section" id="sec-m1b">
+    <div class="section-label">Module 1 · Chapter 2</div>
+    <h2 class="chapter-title">Service Package Builder</h2>
+    <p class="lead">Clients don't buy services. They buy outcomes. This chapter gives you three ready-to-sell service packages with deliverables, pricing, and positioning — plug your niche in and you're done.</p>
+
+    <div class="callout callout-gold">
+      <div class="callout-label">✦ The 3-Tier Rule</div>
+      <p>Always offer three tiers. Most buyers choose the middle. The cheapest makes the middle feel safe. The premium makes the middle feel like a steal. Price accordingly and the middle tier becomes your primary revenue engine.</p>
+    </div>
+
+    <h3 class="sub-title">Tier 1 — The Starter Package</h3>
+    <table class="price-table">
+      <tr><th>Detail</th><th>Specification</th></tr>
+      <tr><td>Price</td><td class="price-hl">$997 / £850 / €950 one-time</td></tr>
+      <tr><td>Deliverable</td><td>AI audit of current workflows + 1 automated process (email, scheduling, or content) + 30-day support</td></tr>
+      <tr><td>Time to Deliver</td><td>5–7 business days</td></tr>
+      <tr><td>Target Buyer</td><td>Solo operators, micro-businesses, first-time AI adopters</td></tr>
+      <tr><td>Positioning Line</td><td>"Your first AI win — proven, fast, and risk-free."</td></tr>
+    </table>
+
+    <h3 class="sub-title">Tier 2 — The Pro Package (Primary Seller)</h3>
+    <table class="price-table">
+      <tr><th>Detail</th><th>Specification</th></tr>
+      <tr><td>Price</td><td class="price-hl">$2,997 / £2,500 / €2,800 one-time</td></tr>
+      <tr><td>Deliverable</td><td>Full workflow audit + 3 automated systems + custom AI tool stack setup + staff training session + 60-day support</td></tr>
+      <tr><td>Time to Deliver</td><td>10–14 business days</td></tr>
+      <tr><td>Target Buyer</td><td>Small-to-medium businesses, agency owners, team managers</td></tr>
+      <tr><td>Positioning Line</td><td>"Transform three of your biggest bottlenecks into automated revenue — in under two weeks."</td></tr>
+    </table>
+
+    <h3 class="sub-title">Tier 3 — The Enterprise Retainer</h3>
+    <table class="price-table">
+      <tr><th>Detail</th><th>Specification</th></tr>
+      <tr><td>Price</td><td class="price-hl">$5,000–$15,000 / month retainer</td></tr>
+      <tr><td>Deliverable</td><td>Ongoing AI strategy, monthly automation builds, performance reporting, dedicated Slack channel, quarterly business reviews</td></tr>
+      <tr><td>Commitment</td><td>3–6 month minimum</td></tr>
+      <tr><td>Target Buyer</td><td>Growing companies, funded startups, established agencies</td></tr>
+      <tr><td>Positioning Line</td><td>"Your embedded AI officer — without the £180K salary."</td></tr>
+    </table>
+
+    <div class="highlight-strip">
+      <h4>🧮 The Math at 2 Pro Clients + 1 Retainer</h4>
+      <p>2 × $2,997 Pro + 1 × $5,000 retainer = <strong>$10,994/month</strong> — achieved with just 3 clients. You only need 3 clients to cross the $10K threshold. This is not theory. This is arithmetic.</p>
+    </div>
+
+    <div class="section-nav">
+      <button class="nav-btn" onclick="showSection('m1a', document.querySelectorAll('.nav-item')[1])">← Niche Selection</button>
+      <button class="nav-btn next-btn" onclick="showSection('m1c', document.querySelectorAll('.nav-item')[3])">Country Pricing →</button>
+    </div>
+  </div>
+
+  <!-- ══════════ M1C — PRICING ══════════ -->
+  <div class="page-section" id="sec-m1c">
+    <div class="section-label">Module 1 · Chapter 3</div>
+    <h2 class="chapter-title">Pricing by Country</h2>
+    <p class="lead">The same AI service carries a completely different price ceiling depending on the market. This chapter gives you calibrated pricing floors and ceilings for the five highest-value markets you will be selling into.</p>
+
+    <div class="country-row">
+      <div class="country-pill">🇬🇧 United Kingdom</div>
+      <div class="country-pill">🇺🇸 United States</div>
+      <div class="country-pill">🇨🇦 Canada</div>
+      <div class="country-pill">🇦🇺 Australia</div>
+      <div class="country-pill">🇩🇪 Germany</div>
+    </div>
+
+    <table class="price-table">
+      <tr><th>Country</th><th>Starter Floor</th><th>Pro Sweet Spot</th><th>Retainer Range</th><th>Currency Note</th></tr>
+      <tr><td>🇬🇧 UK</td><td>£750</td><td>£2,200 – £3,500</td><td>£3,500 – £10,000/mo</td><td>Invoice in GBP. VAT-register if revenue exceeds £85K.</td></tr>
+      <tr><td>🇺🇸 US</td><td>$997</td><td>$2,997 – $5,000</td><td>$5,000 – $15,000/mo</td><td>Highest ceilings globally. Never underprice US clients.</td></tr>
+      <tr><td>🇨🇦 Canada</td><td>$CAD 1,200</td><td>$CAD 3,500 – $5,500</td><td>$CAD 4,500 – $12,000/mo</td><td>CAD prices slightly below USD. Similar deal structure.</td></tr>
+      <tr><td>🇦🇺 Australia</td><td>$AUD 1,400</td><td>$AUD 4,000 – $6,500</td><td>$AUD 6,000 – $15,000/mo</td><td>GST may apply. AUD purchasing power is strong for AI services.</td></tr>
+      <tr><td>🇩🇪 Germany</td><td>€900</td><td>€2,500 – €4,000</td><td>€4,000 – €10,000/mo</td><td>Germans value precision and documentation. Charge for both. Invoice with 19% VAT for EU.</td></tr>
+    </table>
+
+    <h3 class="sub-title">The Anchoring Technique</h3>
+    <p class="body-text">When you send a proposal, always lead with the Enterprise tier — even if you expect them to choose Pro. The visual contrast makes your Pro package feel reasonable and affordable. This one move increases conversion rates by 40–60% on average.</p>
+
+    <div class="script-block">
+      <div class="script-header">
+        <span>// PROPOSAL PRICING ORDER</span>
+        <button class="copy-btn" onclick="copyScript(this)">Copy</button>
+      </div>
+      <pre>
+<span class="comment">// Always present tiers in this order:</span>
+
+<span class="hl">1. Enterprise Retainer — $10,000/mo</span>   <span class="comment">← anchors high</span>
+<span class="hl">2. Pro Package      — $2,997</span>          <span class="comment">← feels reasonable now</span>
+<span class="hl">3. Starter Package  — $997</span>            <span class="comment">← safety net, rarely chosen</span>
+
+<span class="comment">// Result: 70% of clients choose Pro. 
+// 20% choose Enterprise. 10% choose Starter.
+// Without anchoring: 60% choose Starter.</span></pre>
+    </div>
+
+    <div class="callout callout-green">
+      <div class="callout-label">✅ Key Rule</div>
+      <p>Never negotiate down your price. If a client pushes back, remove a deliverable — do not reduce the rate. "I can do the same rate, but we'd need to remove the staff training session from this package." This protects your value and positions you as a premium operator.</p>
+    </div>
+
+    <div class="section-nav">
+      <button class="nav-btn" onclick="showSection('m1b', document.querySelectorAll('.nav-item')[2])">← Service Packages</button>
+      <button class="nav-btn next-btn" onclick="showSection('m2a', document.querySelectorAll('.nav-item')[4])">LinkedIn Strategy →</button>
+    </div>
+  </div>
+
+  <!-- ══════════ M2A — LINKEDIN ══════════ -->
+  <div class="page-section" id="sec-m2a">
+    <div class="section-label">Module 2 · Chapter 1</div>
+    <h2 class="chapter-title">LinkedIn Domination Strategy</h2>
+    <p class="lead">LinkedIn is the only platform where decision-makers with budget, authority, and urgency scroll through content daily — and comment publicly on their pain points. This chapter turns your profile into an inbound sales machine.</p>
+
+    <h3 class="sub-title">Profile Setup: The 4 Critical Zones</h3>
+
+    <div class="step-box">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <h4>Headline — Your Silent Salesperson</h4>
+        <p>Your headline is shown in every comment, like, and connection request. It must communicate WHO you help, WHAT you solve, and WHAT they get — in under 12 words. Formula: <em>"Helping [niche] businesses [outcome] with AI — No tech background needed."</em></p>
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <h4>About Section — The Curiosity Close</h4>
+        <p>Open with a bold contrarian statement. Middle: 3 bullet outcomes you deliver. End: a low-friction CTA. The about section is read only by people who are already interested — so close them there. Never start with "I am a consultant who..."</p>
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <h4>Featured Section — Your Proof Panel</h4>
+        <p>Use the Featured section to pin: one case study post, your best-performing piece of content, and a direct link to book a discovery call. This is free real estate that most professionals waste with nothing or a generic resume PDF.</p>
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <h4>Banner Image — Your First Impression</h4>
+        <p>Your banner should state your core promise in 8 words or fewer. Use dark background with gold/white text for authority. Include one measurable result: "Helping businesses save 20 hours/week with AI workflows." Design it in Canva in under 10 minutes.</p>
+      </div>
+    </div>
+
+    <h3 class="sub-title">The LinkedIn Posting Formula</h3>
+    <p class="body-text">Post 5× per week. Every post follows this structure — no exceptions. It is engineered to maximize the "see more" click rate, comment volume, and DM conversions.</p>
+
+    <div class="script-block">
+      <div class="script-header">
+        <span>// LINKEDIN POST FORMULA</span>
+        <button class="copy-btn" onclick="copyScript(this)">Copy</button>
+      </div>
+      <pre>
+<span class="hl">LINE 1 — THE HOOK</span> (Must trigger "see more" click)
+  <span class="comment">→ Bold claim, buried truth, or provocative question
+  → No emojis. No "I'm excited to share". No greetings.
+  → Example: "Most UK professionals will be replaced by AI. 
+    Not the ones who do this."</span>
+
+<span class="hl">LINE 2 — THE TWIST</span> (Subvert the expected answer)
+  <span class="comment">→ Surprise them. Give a take they didn't predict.
+  → Example: "The safest people aren't learning AI.
+    They're selling AI services to people who need it."</span>
+
+<span class="hl">LINES 3–6 — THE VALUE BODY</span>
+  <span class="comment">→ 3–5 punchy bullets. Each one a mini-insight.
+  → Short sentences. No paragraphs. White space is trust.
+  → Each bullet must make them nod or lean in.</span>
+
+<span class="hl">LINE 7 — THE CTA</span> (One action only)
+  <span class="comment">→ "Comment SYSTEM and I'll send you the link."
+  → "DM me 'START' and I'll share the exact framework."
+  → Never say "like and share". Comments drive reach.</span></pre>
+    </div>
+
+    <h3 class="sub-title">Top LinkedIn Groups to Post In</h3>
+    <ul class="checklist">
+      <li><div class="check-icon">→</div><div><strong>Entrepreneurs & Business Owners Network</strong> — 500K+ members, global, high buyer intent</div></li>
+      <li><div class="check-icon">→</div><div><strong>Future of Work & AI Innovation</strong> — Professionals anxious about AI job displacement</div></li>
+      <li><div class="check-icon">→</div><div><strong>Digital Marketing & Growth Hacking</strong> — Marketers actively looking for AI tools</div></li>
+      <li><div class="check-icon">→</div><div><strong>UK Business Network</strong> — Highly relevant for GBP-paying clients</div></li>
+      <li><div class="check-icon">→</div><div><strong>Remote Work & Freelancing Professionals</strong> — People in income transition — prime buyers</div></li>
+      <li><div class="check-icon">→</div><div><strong>Tech Leaders & CTO Network</strong> — Senior decision-makers with budget authority</div></li>
+    </ul>
+
+    <div class="section-nav">
+      <button class="nav-btn" onclick="showSection('m1c', document.querySelectorAll('.nav-item')[3])">← Country Pricing</button>
+      <button class="nav-btn next-btn" onclick="showSection('m2b', document.querySelectorAll('.nav-item')[5])">Outreach Scripts →</button>
+    </div>
+  </div>
+
+  <!-- ══════════ M2B — SCRIPTS ══════════ -->
+  <div class="page-section" id="sec-m2b">
+    <div class="section-label">Module 2 · Chapter 2</div>
+    <h2 class="chapter-title">Outreach Scripts That Convert</h2>
+    <p class="lead">These scripts are engineered to feel warm, not cold. They open with genuine curiosity, not a pitch. They trigger a reply because they're about the prospect — not about you or your service.</p>
+
+    <h3 class="sub-title">Script 1 — The First Connection Message</h3>
+    <div class="script-block">
+      <div class="script-header">
+        <span>// CONNECTION REQUEST NOTE (300 chars max)</span>
+        <button class="copy-btn" onclick="copyScript(this)">Copy</button>
+      </div>
+      <pre>
+Hi [First Name],
+
+Came across your profile while looking at [their niche] 
+leaders in [UK/US/etc]. 
+
+Your post on [specific topic] was spot on — 
+especially the point about [specific detail].
+
+Would love to connect and follow your work.
+
+— [Your Name]</pre>
+    </div>
+
+    <h3 class="sub-title">Script 2 — The Follow-Up After Connection (Day 3)</h3>
+    <div class="script-block">
+      <div class="script-header">
+        <span>// FIRST DM AFTER CONNECTING</span>
+        <button class="copy-btn" onclick="copyScript(this)">Copy</button>
+      </div>
+      <pre>
+Hi [First Name], thanks for connecting!
+
+Quick question — I've been working with [niche] businesses 
+in [country] helping them automate [specific task].
+
+Is [specific pain point, e.g. "manual follow-up killing 
+your team's bandwidth"] something you're currently 
+dealing with?
+
+Not pitching anything — just genuinely curious if it's 
+a live problem in your world right now.
+
+[Your Name]</pre>
+    </div>
+
+    <h3 class="sub-title">Script 3 — After They Say "Yes" to the Problem</h3>
+    <div class="script-block">
+      <div class="script-header">
+        <span>// TRANSITION TO DISCOVERY CALL</span>
+        <button class="copy-btn" onclick="copyScript(this)">Copy</button>
+      </div>
+      <pre>
+That's exactly what I've been solving for [similar 
+company/niche].
+
+Most [niche] businesses I work with are losing 
+[X hours/£Y per week] to this — and they don't 
+realise how fast it's fixable with the right AI setup.
+
+Would it be worth a 20-minute call this week? 
+I'll show you what the workflow looks like — 
+no obligation, just so you can see if it fits.
+
+Here's my calendar: [Calendly link]</pre>
+    </div>
+
+    <h3 class="sub-title">Script 4 — LinkedIn Group Comment Strategy</h3>
+    <div class="script-block">
+      <div class="script-header">
+        <span>// COMMENT ON PAIN POINT POSTS</span>
+        <button class="copy-btn" onclick="copyScript(this)">Copy</button>
+      </div>
+      <pre>
+<span class="comment">// When someone posts about a problem you solve:</span>
+
+"This is exactly the pattern I see with [niche] 
+businesses right now.
+
+Most teams are still solving [problem] manually — 
+which works until it doesn't.
+
+The good news: there's an AI workflow that eliminates 
+this in about 5–7 days of setup. 
+
+Happy to share the breakdown if it'd be useful — 
+just drop a comment or DM me."
+
+<span class="comment">// This positions you as an expert without pitching.
+// Expect 3–8 DMs per comment on a high-engagement post.</span></pre>
+    </div>
+
+    <div class="section-nav">
+      <button class="nav-btn" onclick="showSection('m2a', document.querySelectorAll('.nav-item')[4])">← LinkedIn Strategy</button>
+      <button class="nav-btn next-btn" onclick="showSection('m2c', document.querySelectorAll('.nav-item')[6])">Proposal Templates →</button>
+    </div>
+  </div>
+
+  <!-- ══════════ M2C — PROPOSAL ══════════ -->
+  <div class="page-section" id="sec-m2c">
+    <div class="section-label">Module 2 · Chapter 3</div>
+    <h2 class="chapter-title">Winning Proposal Templates</h2>
+    <p class="lead">A great proposal does not inform — it closes. These templates are structured to remove doubt, justify the price psychologically, and make saying yes feel like the safe, obvious choice.</p>
+
+    <h3 class="sub-title">The 6-Section Proposal Structure</h3>
+
+    <div class="step-box">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <h4>Section 1 — Their Problem (Mirror It Back)</h4>
+        <p>Open by describing their situation in language that feels like you read their mind. Do not mention your service yet. Just prove you understand exactly what they're dealing with — using their words from the discovery call. This builds instant trust.</p>
+      </div>
+    </div>
+    <div class="step-box">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <h4>Section 2 — The Cost of Inaction</h4>
+        <p>Quantify what the current situation is costing them in time, money, or opportunity. Be specific: "Based on our call, your team spends approximately 18 hours per week on manual follow-up. At an average salary of £35,000/year, this is costing you £16,380 annually — for a task AI handles in seconds."</p>
+      </div>
+    </div>
+    <div class="step-box">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <h4>Section 3 — Your Proposed Solution</h4>
+        <p>Describe the specific deliverables you will provide — not the technology. Clients buy outcomes, not tools. Say "automated client follow-up system" not "Make.com + OpenAI integration". Keep this section under 150 words.</p>
+      </div>
+    </div>
+    <div class="step-box">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <h4>Section 4 — Timeline & Milestones</h4>
+        <p>Show a 2-week delivery timeline with clear week-by-week milestones. This reassures them that there's a real plan behind the price. Even if your delivery is faster, a detailed timeline communicates professionalism.</p>
+      </div>
+    </div>
+    <div class="step-box">
+      <div class="step-num">5</div>
+      <div class="step-content">
+        <h4>Section 5 — Investment (Not "Price")</h4>
+        <p>Present all three tiers with Enterprise first. Frame it as an "investment" with projected ROI. "At $2,997 — and 18 hours/week of recovered productivity — this system pays for itself in under 2 weeks." The ROI calculation removes price resistance.</p>
+      </div>
+    </div>
+    <div class="step-box">
+      <div class="step-num">6</div>
+      <div class="step-content">
+        <h4>Section 6 — Next Step (One Button)</h4>
+        <p>End with exactly one action: a payment link or a "reply to confirm" instruction. Multiple options create hesitation. The proposal does the selling — your job is to make saying yes as frictionless as possible.</p>
+      </div>
+    </div>
+
+    <div class="callout callout-gold">
+      <div class="callout-label">✦ Proposal Delivery Tip</div>
+      <p>Send proposals as PDF (professional) with a Loom video walkthrough (personal). Recording a 4-minute video saying "I wanted to walk you through this personally" converts 2× better than sending a cold PDF. Prospects feel you built it for them — because you narrated it to them.</p>
+    </div>
+
+    <div class="section-nav">
+      <button class="nav-btn" onclick="showSection('m2b', document.querySelectorAll('.nav-item')[5])">← Outreach Scripts</button>
+      <button class="nav-btn next-btn" onclick="showSection('m3a', document.querySelectorAll('.nav-item')[7])">AI Tool Stack →</button>
+    </div>
+  </div>
+
+  <!-- ══════════ M3A — TOOLS ══════════ -->
+  <div class="page-section" id="sec-m3a">
+    <div class="section-label">Module 3 · Chapter 1</div>
+    <h2 class="chapter-title">The AI Tools Stack — 2026 Edition</h2>
+    <p class="lead">You do not need to own every AI tool. You need the right 8–10 tools that cover every service category you offer. This is the vetted stack — ranked by ROI, not hype.</p>
+
+    <div class="tool-row">
+      <div class="tool-icon">🧠</div>
+      <div class="tool-info"><h5>Claude / ChatGPT-4o</h5><p>Core reasoning, content generation, drafting, analysis, client reports</p></div>
+      <div class="tool-meta"><div class="roi">★★★★★</div><div class="cost">$20–$200/mo</div></div>
+    </div>
+    <div class="tool-row">
+      <div class="tool-icon">⚙️</div>
+      <div class="tool-info"><h5>Make.com (Integromat)</h5><p>Workflow automation between any two tools — the backbone of every client system</p></div>
+      <div class="tool-meta"><div class="roi">★★★★★</div><div class="cost">$9–$29/mo</div></div>
+    </div>
+    <div class="tool-row">
+      <div class="tool-icon">📋</div>
+      <div class="tool-info"><h5>Notion AI</h5><p>Client SOP documentation, project management, knowledge bases, handoff docs</p></div>
+      <div class="tool-meta"><div class="roi">★★★★☆</div><div class="cost">$16/mo</div></div>
+    </div>
+    <div class="tool-row">
+      <div class="tool-icon">🎙️</div>
+      <div class="tool-info"><h5>Otter.ai / Fireflies</h5><p>Auto-transcribe discovery calls, extract action items, send to client automatically</p></div>
+      <div class="tool-meta"><div class="roi">★★★★☆</div><div class="cost">$8–$19/mo</div></div>
+    </div>
+    <div class="tool-row">
+      <div class="tool-icon">🎨</div>
+      <div class="tool-info"><h5>Midjourney / DALL-E 3</h5><p>Client content visual generation — ad creatives, blog imagery, social assets</p></div>
+      <div class="tool-meta"><div class="roi">★★★★☆</div><div class="cost">$10–$30/mo</div></div>
+    </div>
+    <div class="tool-row">
+      <div class="tool-icon">🎬</div>
+      <div class="tool-info"><h5>HeyGen / Synthesia</h5><p>AI video generation for client explainers, training materials, ads. Huge upsell potential.</p></div>
+      <div class="tool-meta"><div class="roi">★★★★☆</div><div class="cost">$29–$89/mo</div></div>
+    </div>
+    <div class="tool-row">
+      <div class="tool-icon">📧</div>
+      <div class="tool-info"><h5>Instantly.ai / Apollo.io</h5><p>AI-powered email outreach sequences. Used to build clients' lead gen systems.</p></div>
+      <div class="tool-meta"><div class="roi">★★★★★</div><div class="cost">$37–$99/mo</div></div>
+    </div>
+    <div class="tool-row">
+      <div class="tool-icon">🤖</div>
+      <div class="tool-info"><h5>Voiceflow / Botpress</h5><p>Build AI chatbots for client customer service. High perceived value, fast to build.</p></div>
+      <div class="tool-meta"><div class="roi">★★★★★</div><div class="cost">$0–$50/mo</div></div>
+    </div>
+    <div class="tool-row">
+      <div class="tool-icon">📊</div>
+      <div class="tool-info"><h5>Gamma.app</h5><p>AI-generated client decks, proposals, and presentations. Cuts presentation time by 80%.</p></div>
+      <div class="tool-meta"><div class="roi">★★★☆☆</div><div class="cost">$0–$15/mo</div></div>
+    </div>
+    <div class="tool-row">
+      <div class="tool-icon">🔒</div>
+      <div class="tool-info"><h5>Zapier (Backup Automation)</h5><p>Simple trigger-action automations. Use when Make.com is overkill. Pre-built templates save hours.</p></div>
+      <div class="tool-meta"><div class="roi">★★★★☆</div><div class="cost">$20–$49/mo</div></div>
+    </div>
+
+    <div class="highlight-strip">
+      <h4>💡 Total Monthly Tool Cost at Scale</h4>
+      <p>Running all 10 tools at full capacity costs approximately <strong>$220–$560/month</strong>. Against a $10,000/month revenue target, this is a 2.2–5.6% overhead. Every other business pays 30–40% overhead. AI agencies are structurally more profitable than traditional consultancies.</p>
+    </div>
+
+    <div class="section-nav">
+      <button class="nav-btn" onclick="showSection('m2c', document.querySelectorAll('.nav-item')[6])">← Proposals</button>
+      <button class="nav-btn next-btn" onclick="showSection('m3b', document.querySelectorAll('.nav-item')[8])">Workflow Automation →</button>
+    </div>
+  </div>
+
+  <!-- ══════════ M3B — WORKFLOWS ══════════ -->
+  <div class="page-section" id="sec-m3b">
+    <div class="section-label">Module 3 · Chapter 2</div>
+    <h2 class="chapter-title">Workflow Automation Maps</h2>
+    <p class="lead">These are the exact automation workflows you will build for clients — mapped step by step. Each one solves a real business problem and justifies your invoice without explanation.</p>
+
+    <h3 class="sub-title">Workflow 1 — The Lead Nurture Machine</h3>
+    <p class="body-text">This workflow is your most sellable system. It intercepts new leads from any source and nurtures them automatically until they book a call or buy — without a human touching anything.</p>
+    <div class="script-block">
+      <div class="script-header"><span>// LEAD NURTURE FLOW (Make.com)</span><button class="copy-btn" onclick="copyScript(this)">Copy</button></div>
+      <pre>
+<span class="hl">TRIGGER:</span> New form submission / CRM entry / website inquiry
+
+<span class="arrow">STEP 1</span> → Extract lead data (name, email, inquiry type)
+<span class="arrow">STEP 2</span> → Send to OpenAI: Generate personalized response 
+          based on inquiry type (use GPT-4o or Claude)
+<span class="arrow">STEP 3</span> → Send personalized welcome email (via Gmail / Mailchimp)
+<span class="arrow">STEP 4</span> → Wait 24 hours
+<span class="arrow">STEP 5</span> → Send follow-up: Case study or testimonial relevant to inquiry
+<span class="arrow">STEP 6</span> → Wait 48 hours
+<span class="arrow">STEP 7</span> → Send CTA: Book a call (Calendly link)
+<span class="arrow">STEP 8</span> → If no booking in 72hrs → Flag in CRM for manual outreach
+<span class="arrow">STEP 9</span> → Log all activity to Notion dashboard
+
+<span class="comment">// Build time: 4–6 hours
+// Client value: £2,000–£5,000 as standalone service
+// Ongoing retainer potential: £500–£1,500/month to maintain</span></pre>
+    </div>
+
+    <h3 class="sub-title">Workflow 2 — The Content Repurposing Engine</h3>
+    <div class="script-block">
+      <div class="script-header"><span>// CONTENT MACHINE (Make.com + Claude API)</span><button class="copy-btn" onclick="copyScript(this)">Copy</button></div>
+      <pre>
+<span class="hl">TRIGGER:</span> Client publishes a blog post or uploads a transcript
+
+<span class="arrow">STEP 1</span> → Extract text from URL or document
+<span class="arrow">STEP 2</span> → Send to AI: Generate 5 LinkedIn posts from content
+<span class="arrow">STEP 3</span> → Send to AI: Generate 10 tweet/X threads
+<span class="arrow">STEP 4</span> → Send to AI: Generate 1 email newsletter
+<span class="arrow">STEP 5</span> → Send to AI: Generate 3 short-form video scripts
+<span class="arrow">STEP 6</span> → Compile all outputs into Notion page
+<span class="arrow">STEP 7</span> → Send approval email to client with Notion link
+<span class="arrow">STEP 8</span> → On approval → schedule via Buffer or Hootsuite
+
+<span class="comment">// Build time: 3–5 hours
+// Client value: £1,500–£3,500 setup + £800–£2,000/month retainer
+// This alone can sustain a £4,000/month income stream</span></pre>
+    </div>
+
+    <h3 class="sub-title">Workflow 3 — The AI Customer Support System</h3>
+    <div class="script-block">
+      <div class="script-header"><span>// AI SUPPORT BOT (Voiceflow + Make.com)</span><button class="copy-btn" onclick="copyScript(this)">Copy</button></div>
+      <pre>
+<span class="hl">TRIGGER:</span> Customer sends message via website chat or WhatsApp
+
+<span class="arrow">STEP 1</span> → Classify intent: FAQ / complaint / purchase inquiry / refund
+<span class="arrow">STEP 2</span> → FAQ → Pull answer from knowledge base, respond instantly
+<span class="arrow">STEP 3</span> → Complaint → Empathy response + escalate to human (Slack alert)
+<span class="arrow">STEP 4</span> → Purchase inquiry → Share product details + CTA link
+<span class="arrow">STEP 5</span> → Refund → Collect order info → auto-trigger refund workflow
+<span class="arrow">STEP 6</span> → Log every conversation to CRM with sentiment score
+<span class="arrow">STEP 7</span> → Weekly summary report → emailed to client automatically
+
+<span class="comment">// Build time: 6–10 hours
+// Client value: £3,000–£8,000 setup
+// This is your most impressive demo — show this on discovery calls</span></pre>
+    </div>
+
+    <div class="section-nav">
+      <button class="nav-btn" onclick="showSection('m3a', document.querySelectorAll('.nav-item')[7])">← AI Tools</button>
+      <button class="nav-btn next-btn" onclick="showSection('m3c', document.querySelectorAll('.nav-item')[9])">Client SOPs →</button>
+    </div>
+  </div>
+
+  <!-- ══════════ M3C — SOP ══════════ -->
+  <div class="page-section" id="sec-m3c">
+    <div class="section-label">Module 3 · Chapter 3</div>
+    <h2 class="chapter-title">Client SOP Documents</h2>
+    <p class="lead">SOPs (Standard Operating Procedures) are what separate freelancers from agencies. When a client sees you have documented processes for everything, they trust you with larger budgets and longer contracts.</p>
+
+    <h3 class="sub-title">Onboarding SOP — First 48 Hours</h3>
+    <ul class="checklist">
+      <li><div class="check-icon">✓</div><div><strong>Hour 0–2:</strong> Send welcome email with onboarding questionnaire (10 questions max). Collect logins, tool access, and goals in one form via Tally or Typeform.</div></li>
+      <li><div class="check-icon">✓</div><div><strong>Hour 2–8:</strong> Audit their current workflows. Map which processes are manual, how long each takes, and where the highest-value automation opportunity sits.</div></li>
+      <li><div class="check-icon">✓</div><div><strong>Hour 8–24:</strong> Send Audit Report to client. One-page summary: Current State → Pain Cost → Proposed Automation → Expected Outcome. This positions you as strategic, not just technical.</div></li>
+      <li><div class="check-icon">✓</div><div><strong>Hour 24–48:</strong> Kickoff call (30 min). Confirm priorities, agree on delivery timeline, set Slack channel for communication. Record the call with Fireflies.</div></li>
+    </ul>
+
+    <h3 class="sub-title">Delivery SOP — Week by Week</h3>
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="week">Week 1</div>
+        <h4>Build & Configure</h4>
+        <p>Set up the core automation workflow. Connect all tools. Test internally with dummy data. Build client knowledge base in Notion.</p>
+      </div>
+      <div class="timeline-item">
+        <div class="week">Week 2</div>
+        <h4>Test & Refine</h4>
+        <p>Run live test with real client data. Document edge cases. Adjust AI prompts based on output quality. Send video walkthrough via Loom.</p>
+      </div>
+      <div class="timeline-item">
+        <div class="week">Week 2 End</div>
+        <h4>Handoff & Training</h4>
+        <p>60-minute training session (recorded). Deliver: full SOP document, login details, troubleshooting guide. Request a LinkedIn testimonial.</p>
+      </div>
+      <div class="timeline-item">
+        <div class="week">Day 30</div>
+        <h4>30-Day Check-In</h4>
+        <p>Send automated check-in email at Day 30. Review performance. Pitch the retainer upgrade. Convert 40–60% of project clients to retainers with this one touch.</p>
+      </div>
+    </div>
+
+    <div class="callout callout-blue">
+      <div class="callout-label">⚡ The Retainer Pitch Trigger</div>
+      <p>The best time to pitch a retainer is at the 30-day check-in — not during delivery. By then, they've seen real results, they trust you, and the idea of losing the system feels risky. That's the moment to offer: "I can maintain and improve this for £1,200/month — or you can manage it yourself from here. Most clients choose to keep us involved."</p>
+    </div>
+
+    <div class="section-nav">
+      <button class="nav-btn" onclick="showSection('m3b', document.querySelectorAll('.nav-item')[8])">← Workflows</button>
+      <button class="nav-btn next-btn" onclick="showSection('m4a', document.querySelectorAll('.nav-item')[10])">$10K Roadmap →</button>
+    </div>
+  </div>
+
+  <!-- ══════════ M4A — ROADMAP ══════════ -->
+  <div class="page-section" id="sec-m4a">
+    <div class="section-label">Module 4 · Chapter 1</div>
+    <h2 class="chapter-title">The 90-Day $10K/Month Roadmap</h2>
+    <p class="lead">This is your complete action plan from zero clients to consistent $10K months — broken into three phases of 30 days each. Follow the sequence exactly. Do not skip ahead.</p>
+
+    <div class="math-box">
+      <div class="math-row"><div class="label">Month 1 Target Revenue</div><div class="value">$997 – $2,997</div></div>
+      <div class="math-row"><div class="label">Month 2 Target Revenue</div><div class="value">$4,000 – $6,000</div></div>
+      <div class="math-row total"><div class="label">Month 3 Target Revenue</div><div class="value">$10,000+</div></div>
+    </div>
+
+    <h3 class="sub-title">Phase 1 — Days 1–30: Position & Prove</h3>
+    <ul class="checklist">
+      <li><div class="check-icon">1</div><div>Finalize your niche using the PAIN × BUDGET Matrix (Chapter 1). Lock it in. No pivoting for 90 days.</div></li>
+      <li><div class="check-icon">2</div><div>Rebuild your LinkedIn profile using the 4 Critical Zones framework. Headline, About, Featured, and Banner all updated in one session.</div></li>
+      <li><div class="check-icon">3</div><div>Build Workflow 1 (Lead Nurture Machine) on your own account as proof of concept. Record a Loom demo video. This is your case study.</div></li>
+      <li><div class="check-icon">4</div><div>Offer 1 free or deeply discounted project to a business in your niche. Build it, get a result, capture a testimonial. This is your social proof engine.</div></li>
+      <li><div class="check-icon">5</div><div>Post 5× per week on LinkedIn using the Post Formula. Join 8 LinkedIn Groups in your niche and post in all of them weekly.</div></li>
+      <li><div class="check-icon">6</div><div>Send 10–15 connection requests per day to decision-makers in your niche. Follow up using the 3-message sequence in Module 2.</div></li>
+    </ul>
+
+    <h3 class="sub-title">Phase 2 — Days 31–60: Convert & Collect</h3>
+    <ul class="checklist">
+      <li><div class="check-icon">1</div><div>You should have 1–3 discovery calls booked by now. Use the Proposal Template from Module 2 to close at least one paid client at Starter or Pro tier.</div></li>
+      <li><div class="check-icon">2</div><div>Deliver the first project using the 2-Week Delivery SOP. Over-deliver on communication, not complexity.</div></li>
+      <li><div class="check-icon">3</div><div>Publish the case study from Phase 1 as a LinkedIn post. This is now your highest-performing content piece. Pin it to your Featured section.</div></li>
+      <li><div class="check-icon">4</div><div>Start offering the Pro Package as your primary offer. Stop leading with Starter. Your first win gives you the confidence and credibility to command it.</div></li>
+      <li><div class="check-icon">5</div><div>At Day 45, send a check-in to your free client from Phase 1. Pitch the retainer. Use the script in Module 4, Chapter 2.</div></li>
+    </ul>
+
+    <h3 class="sub-title">Phase 3 — Days 61–90: Scale & Retain</h3>
+    <ul class="checklist">
+      <li><div class="check-icon">1</div><div>You should now have 1–2 paying clients. Focus on converting them to retainers — this is where your income stabilizes and compounds.</div></li>
+      <li><div class="check-icon">2</div><div>Activate the Referral Loop: ask every satisfied client for 2 referrals. Offer a referral bonus (£200 or a free workflow). This is your fastest growth lever.</div></li>
+      <li><div class="check-icon">3</div><div>By Day 90, target this income mix: 1 retainer at $5,000/month + 2 Pro projects at $2,997 each = $10,994 total. Done.</div></li>
+    </ul>
+
+    <div class="section-nav">
+      <button class="nav-btn" onclick="showSection('m3c', document.querySelectorAll('.nav-item')[9])">← Client SOPs</button>
+      <button class="nav-btn next-btn" onclick="showSection('m4b', document.querySelectorAll('.nav-item')[11])">Retainer System →</button>
+    </div>
+  </div>
+
+  <!-- ══════════ M4B — RETAINER ══════════ -->
+  <div class="page-section" id="sec-m4b">
+    <div class="section-label">Module 4 · Chapter 2</div>
+    <h2 class="chapter-title">Retainer & Upsell System</h2>
+    <p class="lead">One-off projects pay bills. Retainers build wealth. This chapter gives you the exact pitch, structure, and upsell sequences to turn project clients into long-term monthly income.</p>
+
+    <h3 class="sub-title">The Retainer Conversion Script</h3>
+    <div class="script-block">
+      <div class="script-header"><span>// 30-DAY CHECK-IN EMAIL (Retainer Pitch)</span><button class="copy-btn" onclick="copyScript(this)">Copy</button></div>
+      <pre>
+Subject: Your AI system — 30-day update 📊
+
+Hi [Name],
+
+It's been 30 days since we launched your [workflow name]. 
+Quick update on what it's done for you:
+
+→ [X] hours of manual work eliminated
+→ [X] leads automatically followed up
+→ [X] [outcome metric] achieved
+
+The system is running well. 
+
+As it grows, it'll need updates — new AI capabilities, 
+prompt improvements, and new automations as your 
+business evolves.
+
+Two options from here:
+
+<span class="hl">Option 1: Self-manage</span>
+I'll hand over full documentation and you run it internally.
+
+<span class="hl">Option 2: Stay on retainer — £1,200/month</span>
+I monitor, maintain, and improve your AI stack monthly.
+You get a dedicated Slack line and a new automation 
+every 60 days included.
+
+Most clients choose Option 2 — once you see what AI 
+does to your week, you don't want it going off-rails 
+unsupervised.
+
+Happy to jump on a 15-min call if you'd like to discuss.
+
+[Your Name]</pre>
+    </div>
+
+    <h3 class="sub-title">Upsell Sequence — After Each Delivery</h3>
+    <div class="grid-3">
+      <div class="card">
+        <div class="card-icon">📧</div>
+        <h4>Day 30 Email</h4>
+        <p>Results recap + retainer pitch. Most powerful upsell moment. Expected conversion: 40–60%.</p>
+        <span class="card-tag tag-gold">Primary</span>
+      </div>
+      <div class="card">
+        <div class="card-icon">📱</div>
+        <h4>Day 45 DM</h4>
+        <p>Share a new AI tool or capability relevant to their business. Position it as the next project.</p>
+        <span class="card-tag tag-blue">Secondary</span>
+      </div>
+      <div class="card">
+        <div class="card-icon">🎯</div>
+        <h4>Day 60 Offer</h4>
+        <p>Quarterly AI Strategy Session — $500–$1,500. Keeps you top of mind and generates project referrals.</p>
+        <span class="card-tag tag-green">Bonus</span>
+      </div>
+    </div>
+
+    <h3 class="sub-title">The Referral Loop System</h3>
+    <div class="script-block">
+      <div class="script-header"><span>// REFERRAL REQUEST EMAIL</span><button class="copy-btn" onclick="copyScript(this)">Copy</button></div>
+      <pre>
+Subject: Quick favour — if you know anyone who needs this
+
+Hi [Name],
+
+Really glad the [system] has been delivering results 
+for your team.
+
+I have one spot opening up in [Month] for a new client 
+in [niche].
+
+If you know anyone — a peer, a competitor, or a business 
+owner you respect — who's dealing with similar headaches, 
+I'd love an introduction.
+
+As a thank-you, I'll add a free automation to your 
+stack (worth £400) for anyone who becomes a client 
+through your referral.
+
+No pressure at all — just thought I'd ask since the 
+best clients always come from the best clients. 😊
+
+[Your Name]</pre>
+    </div>
+
+    <div class="section-nav">
+      <button class="nav-btn" onclick="showSection('m4a', document.querySelectorAll('.nav-item')[10])">← Roadmap</button>
+      <button class="nav-btn next-btn" onclick="showSection('m4c', document.querySelectorAll('.nav-item')[12])">Tax Guide →</button>
+    </div>
+  </div>
+
+  <!-- ══════════ M4C — TAX ══════════ -->
+  <div class="page-section" id="sec-m4c">
+    <div class="section-label">Module 4 · Chapter 3</div>
+    <h2 class="chapter-title">Tax Guide by Country</h2>
+    <p class="lead">This is not legal advice — consult a local accountant before acting. This guide gives you the foundational knowledge to have an informed conversation with a professional and avoid costly surprises.</p>
+
+    <div class="callout callout-gold">
+      <div class="callout-label">⚠️ Important</div>
+      <p>Tax laws change frequently. Always verify with a qualified local accountant or tax professional before making decisions. The figures below are indicative for 2026 and provided for general awareness only.</p>
+    </div>
+
+    <h3 class="sub-title">🇬🇧 United Kingdom</h3>
+    <table class="price-table">
+      <tr><th>Detail</th><th>Key Information</th></tr>
+      <tr><td>Structure</td><td>Register as a Sole Trader (simple) or Limited Company (more tax-efficient above £50K/year)</td></tr>
+      <tr><td>VAT Threshold</td><td>Register for VAT when turnover exceeds £85,000/year. Charge 20% VAT to UK clients.</td></tr>
+      <tr><td>Income Tax</td><td>Basic rate 20% (up to £50,270). Higher rate 40% (£50,270–£125,140). Allowable expenses reduce taxable income.</td></tr>
+      <tr><td>Corporation Tax</td><td>Limited companies pay 19–25% corporation tax on profit. Directors can extract via salary + dividends to optimise.</td></tr>
+      <tr><td>Key Deduction</td><td>All AI tool subscriptions, home office, hardware, and professional development are deductible business expenses.</td></tr>
+    </table>
+
+    <h3 class="sub-title">🇺🇸 United States</h3>
+    <table class="price-table">
+      <tr><th>Detail</th><th>Key Information</th></tr>
+      <tr><td>Structure</td><td>Start as Sole Proprietor (Schedule C) or form an LLC. S-Corp election above ~$50K net profit saves self-employment tax.</td></tr>
+      <tr><td>Self-Employment Tax</td><td>15.3% on net profit up to $160K+ (Social Security + Medicare). Deductible itself.</td></tr>
+      <tr><td>Quarterly Taxes</td><td>Pay estimated taxes quarterly (April, June, September, January). Missing quarters triggers penalties.</td></tr>
+      <tr><td>Key Deduction</td><td>Home office, software, courses, travel for client meetings, and health insurance premiums (if self-employed) are all deductible.</td></tr>
+      <tr><td>Foreign Clients</td><td>You invoice in USD. If clients are foreign businesses, they may issue you a 1099. Keep W-8 or W-9 forms ready.</td></tr>
+    </table>
+
+    <h3 class="sub-title">🇨🇦 Canada · 🇦🇺 Australia · 🇩🇪 Germany</h3>
+    <table class="price-table">
+      <tr><th>Country</th><th>Key Tax Notes</th></tr>
+      <tr><td>🇨🇦 Canada</td><td>Register as a sole proprietor or incorporation. GST/HST registration required above $30K CAD/year. Federal + provincial income tax applies. All tools and software deductible.</td></tr>
+      <tr><td>🇦🇺 Australia</td><td>ABN (Australian Business Number) required. GST registration above $75,000 AUD/year. 10% GST applies. Deduct all tools, hardware, courses.</td></tr>
+      <tr><td>🇩🇪 Germany</td><td>Register as Freiberufler or Gewerbe. VAT (Umsatzsteuer) 19%. Income tax 14–42% depending on bracket. Use Kleinunternehmerregelung (small business rule) if under €22,000/year turnover to waive VAT. Accountant essential.</td></tr>
+    </table>
+
+    <div class="highlight-strip">
+      <h4>💡 Universal Tax Strategy for AI Agency Owners</h4>
+      <p>Open a separate bank account for your agency from Day 1. Put aside 25–30% of every payment immediately. This is your tax reserve. Pay for all tools and equipment through the business account. Hire an accountant once you cross $3,000/month — their fee pays for itself in deductions they find that you'd miss.</p>
+    </div>
+
+    <div class="section-nav">
+      <button class="nav-btn" onclick="showSection('m4b', document.querySelectorAll('.nav-item')[11])">← Retainer System</button>
+      <button class="nav-btn next-btn" onclick="showSection('bonus', document.querySelectorAll('.nav-item')[13])">Bonus: LinkedIn →</button>
+    </div>
+  </div>
+
+  <!-- ══════════ BONUS — LINKEDIN PROFILE ══════════ -->
+  <div class="page-section" id="sec-bonus">
+    <div class="section-label">Bonus Module</div>
+    <h2 class="chapter-title">LinkedIn Profile Makeover Blueprint</h2>
+    <p class="lead">Your LinkedIn profile is your 24/7 sales asset. These are the exact formulas, examples, and structures that turn a dormant profile into an inbound DM machine — even while you sleep.</p>
+
+    <h3 class="sub-title">Headline Formulas That Get DMs</h3>
+
+    <div class="grid-2">
+      <div class="card">
+        <h4>Formula A — Outcome-First</h4>
+        <p style="font-family:'DM Mono',monospace;font-size:12px;margin-top:8px;color:var(--gold-light);">"Helping [Niche] businesses [Outcome] with AI | [Country/Market]"</p>
+        <p style="margin-top:8px;">Example: "Helping UK real estate agencies close 30% more deals with AI automation | London-based"</p>
+      </div>
+      <div class="card">
+        <h4>Formula B — Pain-First</h4>
+        <p style="font-family:'DM Mono',monospace;font-size:12px;margin-top:8px;color:var(--gold-light);">"I eliminate [Pain] for [Niche] | AI Automation Consultant"</p>
+        <p style="margin-top:8px;">Example: "I eliminate manual admin for healthcare businesses | AI Workflow Consultant | UK & US"</p>
+      </div>
+      <div class="card">
+        <h4>Formula C — Results-Led</h4>
+        <p style="font-family:'DM Mono',monospace;font-size:12px;margin-top:8px;color:var(--gold-light);">"[Niche] businesses save [X hours/£X] using my AI systems"</p>
+        <p style="margin-top:8px;">Example: "E-commerce brands save 20hrs/week using my AI content systems | Helped 30+ brands"</p>
+      </div>
+      <div class="card">
+        <h4>Formula D — Anti-Generic</h4>
+        <p style="font-family:'DM Mono',monospace;font-size:12px;margin-top:8px;color:var(--gold-light);">"Not an AI hype person. I build AI systems that [Niche] actually use."</p>
+        <p style="margin-top:8px;">Example: "Not an AI guru. I build automation systems law firms actually use to cut 60% of admin time."</p>
+      </div>
+    </div>
+
+    <h3 class="sub-title">The About Section Template</h3>
+    <div class="script-block">
+      <div class="script-header"><span>// LINKEDIN ABOUT SECTION (Copy & Customize)</span><button class="copy-btn" onclick="copyScript(this)">Copy</button></div>
+      <pre>
+<span class="hl">OPENING LINE (The Contrarian Hook):</span>
+"Most [niche] businesses aren't losing clients because 
+of bad service. They're losing them because of slow 
+follow-up, manual admin, and inconsistent communication."
+
+<span class="hl">THE BRIDGE:</span>
+"I've spent the last [X months] building AI automation 
+systems that solve exactly this — for [niche] businesses 
+across the UK, US, and Australia."
+
+<span class="hl">3 OUTCOME BULLETS:</span>
+→ [Specific result 1 — e.g. "20 hours/week of admin eliminated"]
+→ [Specific result 2 — e.g. "3× faster lead follow-up"]
+→ [Specific result 3 — e.g. "30-day delivery, no tech team needed"]
+
+<span class="hl">SOCIAL PROOF LINE:</span>
+"[Your niche] businesses I've worked with describe it 
+as having a silent operations team that never sleeps."
+
+<span class="hl">THE CTA:</span>
+"If this sounds like what your business needs, 
+DM me 'AUTOMATE' and I'll send you a free 
+5-minute audit of where AI can save you the most time."</pre>
+    </div>
+
+    <h3 class="sub-title">Featured Section Strategy</h3>
+    <ul class="checklist">
+      <li><div class="check-icon">1</div><div><strong>Pin your best-performing post</strong> — ideally a case study or insight that got 100+ likes. This is proof your thinking resonates.</div></li>
+      <li><div class="check-icon">2</div><div><strong>Pin a "Free Resource" link</strong> — link to a free checklist, guide, or short video. Generates email subscribers and builds pre-sale trust passively.</div></li>
+      <li><div class="check-icon">3</div><div><strong>Pin your booking link</strong> — Calendly or Cal.com link with the label "Book a Free AI Audit Call." Converts profile views into conversations directly.</div></li>
+    </ul>
+
+    <div class="callout callout-green">
+      <div class="callout-label">✅ The Final Rule</div>
+      <p>Your LinkedIn profile is never finished. Update your headline whenever you get a new result. Add to your Featured section every time you publish a high-performing post. The profile that compounds is the one that reflects your growing evidence — not a one-time setup that collects dust.</p>
+    </div>
+
+    <div class="highlight-strip">
+      <h4>🎉 You've Completed the AI Business Operating System</h4>
+      <p>You now have everything needed to launch, sell, deliver, and scale an AI consulting agency — calibrated for the highest-paying markets on earth. The only thing left is execution. Start with your niche. Lock it in today. Post on LinkedIn this week. Every other step follows from those two.</p>
+    </div>
+
+    <div class="section-nav">
+      <button class="nav-btn" onclick="showSection('m4c', document.querySelectorAll('.nav-item')[12])">← Tax Guide</button>
+      <button class="nav-btn next-btn" onclick="showSection('cover', document.querySelectorAll('.nav-item')[0])">↩ Back to Start</button>
+    </div>
+  </div>
+
+</main>
+
+<script>
+const sections = {
+  'cover':'sec-cover','m1a':'sec-m1a','m1b':'sec-m1b','m1c':'sec-m1c',
+  'm2a':'sec-m2a','m2b':'sec-m2b','m2c':'sec-m2c',
+  'm3a':'sec-m3a','m3b':'sec-m3b','m3c':'sec-m3c',
+  'm4a':'sec-m4a','m4b':'sec-m4b','m4c':'sec-m4c','bonus':'sec-bonus'
+};
+
+const labels = {
+  'cover':'Welcome','m1a':'Niche Selection','m1b':'Service Packages','m1c':'Country Pricing',
+  'm2a':'LinkedIn Strategy','m2b':'Outreach Scripts','m2c':'Proposal Templates',
+  'm3a':'AI Tools Stack','m3b':'Workflow Automation','m3c':'Client SOPs',
+  'm4a':'$10K Roadmap','m4b':'Retainer System','m4c':'Tax Guide','bonus':'LinkedIn Makeover'
+};
+
+let visited = new Set(['cover']);
+
+function showSection(key, navEl) {
+  // Hide all sections
+  document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+  // Show target
+  const secEl = document.getElementById(sections[key]);
+  if (secEl) secEl.classList.add('active');
+  if (navEl) navEl.classList.add('active');
+
+  // Breadcrumb
+  document.getElementById('breadcrumb-text').textContent = labels[key] || key;
+
+  // Mark visited
+  visited.add(key);
+  const pct = Math.round((visited.size / Object.keys(sections).length) * 100);
+  document.getElementById('pct').textContent = pct + '%';
+  document.getElementById('pbar').style.width = pct + '%';
+
+  // Scroll top
+  document.getElementById('main').scrollTo(0, 0);
+  window.scrollTo(0, 0);
+
+  // Close mobile sidebar
+  document.getElementById('sidebar').classList.remove('open');
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
+function copyScript(btn) {
+  const pre = btn.closest('.script-block').querySelector('pre');
+  const text = pre.innerText || pre.textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy', 2000);
+  });
+}
+
+// Close sidebar on outside click (mobile)
+document.getElementById('main').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.remove('open');
+});
+</script>
+</body>
+</html>
